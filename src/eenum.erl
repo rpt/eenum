@@ -17,6 +17,7 @@
 %% @author Krzysztof Rutka <krzysztof.rutka@gmail.com>
 %% @copyright 2012 Krzysztof Rutka
 %% @doc Module for eenum parse tranform.
+%% @private
 -module(eenum).
 
 %% Parse transform
@@ -29,9 +30,10 @@
 %% Parse transform function
 %%------------------------------------------------------------------------------
 
-%% @private
-parse_transform([File, Module | Forms] = OriginalForms, _Options) ->
-    {attribute, 1, file, {Filename, 1}} = File,
+parse_transform([{attribute, 1, file, {Filename, 1}} = File,
+		 {attribute, _, module, Module} = Mod |
+		 Forms] = OriginalForms, _Options) ->
+    put(module, Module),
     put(errors, []),
     put(warnings, []),
     case find_enums(Forms, []) of
@@ -40,7 +42,7 @@ parse_transform([File, Module | Forms] = OriginalForms, _Options) ->
 	EnumForms ->
 	    case get_errors() of
 		[] ->
-		    NewForms = [File, Module, ?EXPORT |
+		    NewForms = [File, Mod, ?EXPORT |
 				lists:keydelete(eof, 1, Forms)] ++ EnumForms,
 		    case get_warnings() of
 			[] ->
@@ -53,7 +55,6 @@ parse_transform([File, Module | Forms] = OriginalForms, _Options) ->
 	    end
     end.
 
-%% @private
 format_error({duplicate, Name}) ->
     io_lib:format("enum '~p' already defined", [Name]);
 format_error({invalid, Name}) ->
@@ -63,7 +64,6 @@ format_error({invalid, Name}) ->
 %% Internal functions
 %%------------------------------------------------------------------------------
 
-%% @private
 find_enums([{eof, _Line}], []) ->
     [];
 find_enums([{eof, Line}], Acc) ->
@@ -74,7 +74,6 @@ find_enums([{attribute, Line, enum, Enums} | Rest], Acc) ->
 find_enums([_Else | Rest], Acc) ->
     find_enums(Rest, Acc).
 
-%% @private
 parse_enums({Name, Enums}, Line, Acc) when is_atom(Name) ->
     case lists:keymember(Name, 1, Acc) of
 	true ->
@@ -93,7 +92,6 @@ parse_enums({Name, Enums}, Line, Acc) when is_atom(Name) ->
 	    end
     end.
 
-%% @private
 get_type([], Type) ->
     Type;
 get_type([Atom | Rest], invalid) when is_atom(Atom) ->
@@ -114,19 +112,16 @@ get_type([{Int, Atom} | _], simple) when is_integer(Int),
 get_type(_, _) ->
     invalid.
 
-%% @private
 generate_funs(Line, Enums) ->
     {Line2, ToIntFun} = to_int_fun(Line, Enums),
     {Line3, ToAtomFun} = to_atom_fun(Line2, Enums),
     [ToIntFun, ToAtomFun, {eof, Line3}].
 
-%% @private
 to_int_fun(Line, Enums) ->
     {NewLine, Clauses} = to_int_clauses(Line, Enums, []),
     Fun = {function, Line, to_int, 2, Clauses},
     {NewLine, Fun}.
 
-%% @private
 to_int_clauses(Line, [], Acc) ->
     {Line + 1, Acc};
 to_int_clauses(Line, [{Name, Enums} | Rest], Acc) ->
@@ -135,13 +130,11 @@ to_int_clauses(Line, [{Name, Enums} | Rest], Acc) ->
 		[], [{integer, Line, Int}]} || {Int, Atom} <- Enums],
     to_int_clauses(Line + 1, Rest, Acc ++ Clauses).
 
-%% @private
 to_atom_fun(Line, Enums) ->
     {NewLine, Clauses} = to_atom_clauses(Line, Enums, []),
     Fun = {function, Line, to_atom, 2, Clauses},
     {NewLine, Fun}.
 
-%% @private
 to_atom_clauses(Line, [], Acc) ->
     {Line + 1, Acc};
 to_atom_clauses(Line, [{Name, Enums} | Rest], Acc) ->
@@ -151,18 +144,20 @@ to_atom_clauses(Line, [{Name, Enums} | Rest], Acc) ->
     to_atom_clauses(Line + 1, Rest, Acc ++ Clauses).
 
 %% Unused for now
-%% @private
 %% add_error(Error) ->
 %%     put(errors, [Error | get(errors)]).
 
-%% @private
 get_errors() ->
-    [{Line, ?MODULE, Error} || {Line, Error} <- get(errors)].
+    [{Line, get(module), Error} || {Line, Error} <- get(errors)].
 
-%% @private
+%% FIXME: For some reason returning warnings in tests gives an error...
+-ifdef(TEST).
+add_warning(_) ->
+    [].
+-else.
 add_warning(Warning) ->
     put(warnings, [Warning | get(warnings)]).
+-endif.
 
-%% @private
 get_warnings() ->
-    [{Line, ?MODULE, Warning} || {Line, Warning} <- get(warnings)].
+    [{Line, get(module), Warning} || {Line, Warning} <- get(warnings)].

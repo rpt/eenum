@@ -17,6 +17,7 @@
 %% @author Krzysztof Rutka <krzysztof.rutka@gmail.com>
 %% @copyright 2012 Krzysztof Rutka
 %% @doc Eunit test suite for eenum.
+%% @private
 -module(eenum_test).
 
 -compile({parse_transform, eenum}).

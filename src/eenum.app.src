@@ -2,4 +2,6 @@
  [{description, "Simple enumerations for Erlang"},
   {vsn, "0.1"},
   {applications, [kernel,
-                  stdlib]}]}.
+                  stdlib,
+                  compiler,
+                  syntax_tools]}]}.
