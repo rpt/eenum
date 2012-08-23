@@ -20,48 +20,65 @@
 -module(eenum).
 
 %% Parse transform
--export([parse_transform/2]).
+-export([parse_transform/2,
+	 format_error/1]).
+
+-define(EXPORT, {attribute, 1, export, [{to_int, 2}, {to_atom, 2}]}).
 
 %%------------------------------------------------------------------------------
 %% Parse transform function
 %%------------------------------------------------------------------------------
 
 %% @private
-parse_transform([File, Module | Forms] = OldForms, _Options) ->
+parse_transform([File, Module | Forms] = OriginalForms, _Options) ->
     {attribute, 1, file, {Filename, 1}} = File,
-    EnumForms = find_enums(Forms, Filename, []),
-    case EnumForms of
+    put(errors, []),
+    put(warnings, []),
+    case find_enums(Forms, []) of
 	[] ->
-	    OldForms;
-	_ ->
-	    [File, Module, {attribute, 1, export, [{to_int,2}, {to_atom,2}]} |
-	     lists:keydelete(eof, 1, Forms)] ++ EnumForms
+	    OriginalForms;
+	EnumForms ->
+	    case get_errors() of
+		[] ->
+		    NewForms = [File, Module, ?EXPORT |
+				lists:keydelete(eof, 1, Forms)] ++ EnumForms,
+		    case get_warnings() of
+			[] ->
+			    NewForms;
+			Warnings ->
+			    {warning, NewForms, [{Filename, Warnings}]}
+		    end;
+		Errors ->
+		    {error, [{Filename, Errors}], []}
+	    end
     end.
+
+%% @private
+format_error({duplicate, Name}) ->
+    io_lib:format("enum '~p' already defined", [Name]);
+format_error({invalid, Name}) ->
+    io_lib:format("invalid enum '~p'", [Name]).
 
 %%------------------------------------------------------------------------------
 %% Internal functions
 %%------------------------------------------------------------------------------
 
 %% @private
-find_enums([{eof, Line}], _, Acc) ->
-    case Acc of
-	[] ->
-	    [];
-	_ ->
-	    generate_funs(Line, lists:reverse(Acc))
-    end;
-find_enums([{attribute, Line, enum, Enums} | Rest], Filename, Acc) ->
-    NewAcc = parse_enums(Enums, Filename, Line, Acc),
-    find_enums(Rest, Filename, NewAcc);
-find_enums([_ | Rest], Filename, EnumSet) ->
-    find_enums(Rest, Filename, EnumSet).
+find_enums([{eof, _Line}], []) ->
+    [];
+find_enums([{eof, Line}], Acc) ->
+    generate_funs(Line, lists:reverse(Acc));
+find_enums([{attribute, Line, enum, Enums} | Rest], Acc) ->
+    NewAcc = parse_enums(Enums, Line, Acc),
+    find_enums(Rest, NewAcc);
+find_enums([_Else | Rest], Acc) ->
+    find_enums(Rest, Acc).
 
 %% @private
-parse_enums({Name, Enums}, Filename, Line, Acc) ->
+parse_enums({Name, Enums}, Line, Acc) when is_atom(Name) ->
     case lists:keymember(Name, 1, Acc) of
 	true ->
-	    io:format("~s:~p: enum '~p' already defined~n",
-		      [Filename, Line, Name]),
+	    add_warning({Line, {duplicate, Name}}),
 	    Acc;
 	false ->
 	    case get_type(Enums, invalid) of
@@ -71,8 +88,7 @@ parse_enums({Name, Enums}, Filename, Line, Acc) ->
 		explicit ->
 		    [{Name, Enums} | Acc];
 		invalid ->
-		    io:format("~s:~p: invalid enum '~p'~n",
-			      [Filename, Line, Name]),
+		    add_warning({Line, {invalid, Name}}),
 		    Acc
 	    end
     end.
@@ -133,3 +149,20 @@ to_atom_clauses(Line, [{Name, Enums} | Rest], Acc) ->
 			       {integer, Line, Int}],
 		[], [{atom, Line, Atom}]} || {Int, Atom} <- Enums],
     to_atom_clauses(Line + 1, Rest, Acc ++ Clauses).
+
+%% Unused for now
+%% @private
+%% add_error(Error) ->
+%%     put(errors, [Error | get(errors)]).
+
+%% @private
+get_errors() ->
+    [{Line, ?MODULE, Error} || {Line, Error} <- get(errors)].
+
+%% @private
+add_warning(Warning) ->
+    put(warnings, [Warning | get(warnings)]).
+
+%% @private
+get_warnings() ->
+    [{Line, ?MODULE, Warning} || {Line, Warning} <- get(warnings)].
