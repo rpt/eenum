@@ -25,6 +25,10 @@
 	 format_error/1]).
 
 -define(EXPORT, {attribute, 1, export, [{to_int, 2}, {to_atom, 2}]}).
+-define(ERR_CLAUSE(Line), {clause, Line,
+			   [{var, Line, '_'}, {var, Line, '_'}], [],
+			   [{call, Line, {atom, Line, throw},
+			     [{atom, Line, bad_enum}]}]}).
 
 %%------------------------------------------------------------------------------
 %% Parse transform function
@@ -115,7 +119,7 @@ generate_funs(Line, Enums) ->
 
 to_int_fun(Line, Enums) ->
     {NewLine, Clauses} = to_int_clauses(Line, Enums, []),
-    Fun = {function, Line, to_int, 2, Clauses},
+    Fun = {function, Line, to_int, 2, Clauses ++ [?ERR_CLAUSE(Line)]},
     {NewLine, Fun}.
 
 to_int_clauses(Line, [], Acc) ->
@@ -128,7 +132,7 @@ to_int_clauses(Line, [{Name, Enums} | Rest], Acc) ->
 
 to_atom_fun(Line, Enums) ->
     {NewLine, Clauses} = to_atom_clauses(Line, Enums, []),
-    Fun = {function, Line, to_atom, 2, Clauses},
+    Fun = {function, Line, to_atom, 2, Clauses ++ [?ERR_CLAUSE(Line)]},
     {NewLine, Fun}.
 
 to_atom_clauses(Line, [], Acc) ->

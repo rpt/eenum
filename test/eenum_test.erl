@@ -49,36 +49,36 @@ simple_enum_test() ->
 
 explicit_enum_test() ->
     ?assertEqual(0, to_int(explicit_enum, zero)),
-    ?assertException(error, function_clause, to_int(explicit_enum, one)),
+    ?assertException(throw, bad_enum, to_int(explicit_enum, one)),
     ?assertEqual(2, to_int(explicit_enum, two)),
-    ?assertException(error, function_clause, to_int(explicit_enum, three)),
+    ?assertException(throw, bad_enum, to_int(explicit_enum, three)),
     ?assertEqual(4, to_int(explicit_enum, four)),
-    ?assertException(error, function_clause, to_int(explicit_enum, five)),
+    ?assertException(throw, bad_enum, to_int(explicit_enum, five)),
     ?assertEqual(6, to_int(explicit_enum, six)),
 
     ?assertEqual(zero, to_atom(explicit_enum, 0)),
-    ?assertException(error, function_clause, to_atom(explicit_enum, 1)),
+    ?assertException(throw, bad_enum, to_atom(explicit_enum, 1)),
     ?assertEqual(two, to_atom(explicit_enum, 2)),
-    ?assertException(error, function_clause, to_atom(explicit_enum, 3)),
+    ?assertException(throw, bad_enum, to_atom(explicit_enum, 3)),
     ?assertEqual(four, to_atom(explicit_enum, 4)),
-    ?assertException(error, function_clause, to_atom(explicit_enum, 5)),
+    ?assertException(throw, bad_enum, to_atom(explicit_enum, 5)),
     ?assertEqual(six, to_atom(explicit_enum, 6)).
 
 mixed_enum_test() ->
     ?assertEqual(0, to_int(mixed_enum, zero)),
     ?assertEqual(1, to_int(mixed_enum, one)),
     ?assertEqual(2, to_int(mixed_enum, two)),
-    ?assertException(error, function_clause, to_int(mixed_enum, three)),
+    ?assertException(throw, bad_enum, to_int(mixed_enum, three)),
     ?assertEqual(4, to_int(mixed_enum, four)),
     ?assertEqual(5, to_int(mixed_enum, five)),
-    ?assertException(error, function_clause, to_int(mixed_enum, six)),
+    ?assertException(throw, bad_enum, to_int(mixed_enum, six)),
     ?assertEqual(7, to_int(mixed_enum, seven)),
 
     ?assertEqual(zero, to_atom(mixed_enum, 0)),
     ?assertEqual(one, to_atom(mixed_enum, 1)),
     ?assertEqual(two, to_atom(mixed_enum, 2)),
-    ?assertException(error, function_clause, to_atom(mixed_enum, three)),
+    ?assertException(throw, bad_enum, to_atom(mixed_enum, three)),
     ?assertEqual(four, to_atom(mixed_enum, 4)),
     ?assertEqual(five, to_atom(mixed_enum, 5)),
-    ?assertException(error, function_clause, to_atom(mixed_enum, six)),
+    ?assertException(throw, bad_enum, to_atom(mixed_enum, six)),
     ?assertEqual(seven, to_atom(mixed_enum, 7)).

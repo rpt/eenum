@@ -48,12 +48,14 @@ Will be translated to:
 to_int(simple_enum, zero) -> 0;
 to_int(simple_enum, one) -> 1;
 to_int(simple_enum, two) -> 2;
-to_int(simple_enum, three) -> 3.
+to_int(simple_enum, three) -> 3;
+to_int(_, _) -> throw(bad_enum).
 
 to_atom(simple_enum, 0) -> zero;
 to_atom(simple_enum, 1) -> one;
 to_atom(simple_enum, 2) -> two;
-to_atom(simple_enum, 3) -> three.
+to_atom(simple_enum, 3) -> three;
+to_atom(_, _) -> throw(bad_enum).
 ```
 
 ### Explicit enumerations
@@ -73,12 +75,14 @@ Will be translated to:
 to_int(explicit_enum, zero) -> 0;
 to_int(explicit_enum, two) -> 2;
 to_int(explicit_enum, four) -> 4;
-to_int(explicit_enum, six) -> 6.
+to_int(explicit_enum, six) -> 6;
+to_int(_, _) -> throw(bad_enum).
 
 to_atom(explicit_enum, 0) -> zero;
 to_atom(explicit_enum, 2) -> two;
 to_atom(explicit_enum, 4) -> four;
-to_atom(explicit_enum, 6) -> six.
+to_atom(explicit_enum, 6) -> six;
+to_atom(_, _) -> throw(bad_enum).
 ```
 
 ### Mixed enumerations
@@ -98,12 +102,14 @@ Will be translated to:
 to_int(mixed_enum, one) -> 1;
 to_int(mixed_enum, two) -> 2;
 to_int(mixed_enum, four) -> 4;
-to_int(mixed_enum, five) -> 5.
+to_int(mixed_enum, five) -> 5;
+to_int(_, _) -> throw(bad_enum).
 
 to_atom(mixed_enum, 1) -> one;
 to_atom(mixed_enum, 2) -> two;
 to_atom(mixed_enum, 4) -> four;
-to_atom(mixed_enum, 5) -> five.
+to_atom(mixed_enum, 5) -> five;
+to_atom(_, _) -> thrown(bad_enum).
 ```
 
 [travis_ci]:
