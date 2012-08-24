@@ -59,10 +59,10 @@ to_atom(simple_enum, 3) -> three.
 ### Explicit enumerations
 
 ```erlang
--enum({explicit_enum, [{0, zero},
-                       {2, two},
-                       {4, four},
-                       {6, six}]}).
+-enum({explicit_enum, [{zero, 0},
+                       {two, 2},
+                       {four, 4},
+                       {six, 6}]}).
 ```
 
 Will be translated to:
@@ -79,6 +79,31 @@ to_atom(explicit_enum, 0) -> zero;
 to_atom(explicit_enum, 2) -> two;
 to_atom(explicit_enum, 4) -> four;
 to_atom(explicit_enum, 6) -> six.
+```
+
+### Mixed enumerations
+
+```erlang
+-enum({mixed_enum, [{one, 1},
+                    two,
+                    {four, 4},
+                    five]}).
+```
+
+Will be translated to:
+
+```erlang
+-export([to_int/2, to_atom/2]).
+
+to_int(mixed_enum, one) -> 1;
+to_int(mixed_enum, two) -> 2;
+to_int(mixed_enum, four) -> 4;
+to_int(mixed_enum, five) -> 5.
+
+to_atom(mixed_enum, 1) -> one;
+to_atom(mixed_enum, 2) -> two;
+to_atom(mixed_enum, 4) -> four;
+to_atom(mixed_enum, 5) -> five.
 ```
 
 [travis_ci]:

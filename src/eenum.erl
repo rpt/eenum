@@ -31,14 +31,17 @@
 %%------------------------------------------------------------------------------
 
 parse_transform([{attribute, 1, file, {Filename, 1}} = File,
-		 {attribute, _, module, Module} = Mod |
-		 Forms] = OriginalForms, _Options) ->
-    put(module, Module),
+		 Mod | Forms] = OriginalForms, _Options) ->
     put(errors, []),
     put(warnings, []),
     case find_enums(Forms, []) of
 	[] ->
-	    OriginalForms;
+	    case get_warnings() of
+		[] ->
+		    OriginalForms;
+		Warnings ->
+		    {warning, OriginalForms, [{Filename, Warnings}]}
+	    end;
 	EnumForms ->
 	    case get_errors() of
 		[] ->
@@ -58,7 +61,9 @@ parse_transform([{attribute, 1, file, {Filename, 1}} = File,
 format_error({duplicate, Name}) ->
     io_lib:format("enum '~p' already defined", [Name]);
 format_error({invalid, Name}) ->
-    io_lib:format("invalid enum '~p'", [Name]).
+    io_lib:format("invalid enum '~p'", [Name]);
+format_error(invalid) ->
+    io_lib:format("invalid enum", []).
 
 %%------------------------------------------------------------------------------
 %% Internal functions
@@ -80,42 +85,33 @@ parse_enums({Name, Enums}, Line, Acc) when is_atom(Name) ->
 	    add_warning({Line, {duplicate, Name}}),
 	    Acc;
 	false ->
-	    case get_type(Enums, invalid) of
-		simple ->
-		    List = lists:zip(lists:seq(0, length(Enums) - 1), Enums),
-		    [{Name, List} | Acc];
-		explicit ->
-		    [{Name, Enums} | Acc];
+	    case convert_enums(Enums, 0, []) of
 		invalid ->
 		    add_warning({Line, {invalid, Name}}),
-		    Acc
+		    Acc;
+		ValidEnums ->
+		    [{Name, ValidEnums} | Acc]
 	    end
-    end.
+    end;
+parse_enums(_, Line, Acc) ->
+    add_warning({Line, invalid}),
+    Acc.
 
-get_type([], Type) ->
-    Type;
-get_type([Atom | Rest], invalid) when is_atom(Atom) ->
-    get_type(Rest, simple);
-get_type([Atom | Rest], simple) when is_atom(Atom) ->
-    get_type(Rest, simple);
-get_type([Atom | _], explicit) when is_atom(Atom) ->
-    invalid;
-get_type([{Int, Atom} | Rest], invalid) when is_integer(Int),
-					     is_atom(Atom) ->
-    get_type(Rest, explicit);
-get_type([{Int, Atom} | Rest], explicit) when is_integer(Int),
-					      is_atom(Atom) ->
-    get_type(Rest, explicit);
-get_type([{Int, Atom} | _], simple) when is_integer(Int),
-					      is_atom(Atom) ->
-    invalid;
-get_type(_, _) ->
+convert_enums([], _, Acc) ->
+    lists:reverse(Acc);
+convert_enums([Atom | Rest], C, Acc) when is_atom(Atom) ->
+    convert_enums(Rest, C + 1, [{Atom, C} | Acc]);
+convert_enums([{Atom, Int} | Rest], C, Acc) when is_atom(Atom),
+						 is_integer(Int),
+						 Int >= C ->
+    convert_enums(Rest, Int + 1, [{Atom, Int} | Acc]);
+convert_enums(_, _, _) ->
     invalid.
 
 generate_funs(Line, Enums) ->
     {Line2, ToIntFun} = to_int_fun(Line, Enums),
     {Line3, ToAtomFun} = to_atom_fun(Line2, Enums),
-    [ToIntFun, ToAtomFun, {eof, Line3}].
+    [ToIntFun, ToAtomFun, {eof, Line3 + 1}].
 
 to_int_fun(Line, Enums) ->
     {NewLine, Clauses} = to_int_clauses(Line, Enums, []),
@@ -127,8 +123,8 @@ to_int_clauses(Line, [], Acc) ->
 to_int_clauses(Line, [{Name, Enums} | Rest], Acc) ->
     Clauses = [{clause, Line, [{atom, Line, Name},
 			       {atom, Line, Atom}],
-		[], [{integer, Line, Int}]} || {Int, Atom} <- Enums],
-    to_int_clauses(Line + 1, Rest, Acc ++ Clauses).
+		[], [{integer, Line, Int}]} || {Atom, Int} <- Enums],
+    to_int_clauses(Line, Rest, Acc ++ Clauses).
 
 to_atom_fun(Line, Enums) ->
     {NewLine, Clauses} = to_atom_clauses(Line, Enums, []),
@@ -140,24 +136,20 @@ to_atom_clauses(Line, [], Acc) ->
 to_atom_clauses(Line, [{Name, Enums} | Rest], Acc) ->
     Clauses = [{clause, Line, [{atom, Line, Name},
 			       {integer, Line, Int}],
-		[], [{atom, Line, Atom}]} || {Int, Atom} <- Enums],
-    to_atom_clauses(Line + 1, Rest, Acc ++ Clauses).
+		[], [{atom, Line, Atom}]} || {Atom, Int} <- Enums],
+    to_atom_clauses(Line, Rest, Acc ++ Clauses).
 
 %% Unused for now
 %% add_error(Error) ->
 %%     put(errors, [Error | get(errors)]).
 
 get_errors() ->
-    [{Line, get(module), Error} || {Line, Error} <- get(errors)].
+    lists:reverse([{Line, ?MODULE, Error}
+		   || {Line, Error} <- get(errors)]).
 
-%% FIXME: For some reason returning warnings in tests gives an error...
--ifdef(TEST).
-add_warning(_) ->
-    [].
--else.
 add_warning(Warning) ->
     put(warnings, [Warning | get(warnings)]).
--endif.
 
 get_warnings() ->
-    [{Line, get(module), Warning} || {Line, Warning} <- get(warnings)].
+    lists:reverse([{Line, ?MODULE, Warning}
+		   || {Line, Warning} <- get(warnings)]).
