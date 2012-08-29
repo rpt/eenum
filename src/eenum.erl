@@ -25,10 +25,10 @@
 	 format_error/1]).
 
 -define(EXPORT, {attribute, 1, export, [{to_int, 2}, {to_atom, 2}]}).
--define(ERR_CLAUSE(Line), {clause, Line,
-			   [{var, Line, '_'}, {var, Line, '_'}], [],
-			   [{call, Line, {atom, Line, throw},
-			     [{atom, Line, bad_enum}]}]}).
+-define(ERR_CLAUSE(Line, A), {clause, Line,
+			      [{var, Line, '_'} || _ <- lists:seq(1, A)], [],
+			      [{call, Line, {atom, Line, throw},
+				[{atom, Line, bad_enum}]}]}).
 
 %%------------------------------------------------------------------------------
 %% Parse transform function
@@ -114,34 +114,54 @@ convert_enums(_, _, _) ->
 
 generate_funs(Line, Enums) ->
     {Line2, ToIntFun} = to_int_fun(Line, Enums),
-    {Line3, ToAtomFun} = to_atom_fun(Line2, Enums),
-    [ToIntFun, ToAtomFun, {eof, Line3 + 1}].
+    {Line3, ToIntFuns} = enum_to_int_funs(Line2, Enums, []),
+    {Line4, ToAtomFun} = to_atom_fun(Line3, Enums),
+    {Line5, ToAtomFuns} = enum_to_atom_funs(Line4, Enums, []),
+    [ToIntFun | ToIntFuns] ++ [ToAtomFun | ToAtomFuns] ++ [{eof, Line5 + 1}].
 
 to_int_fun(Line, Enums) ->
     {NewLine, Clauses} = to_int_clauses(Line, Enums, []),
-    Fun = {function, Line, to_int, 2, Clauses ++ [?ERR_CLAUSE(Line)]},
+    Fun = {function, Line, to_int, 2, Clauses ++ [?ERR_CLAUSE(NewLine, 2)]},
     {NewLine, Fun}.
 
 to_int_clauses(Line, [], Acc) ->
-    {Line + 1, Acc};
-to_int_clauses(Line, [{Name, Enums} | Rest], Acc) ->
-    Clauses = [{clause, Line, [{atom, Line, Name},
-			       {atom, Line, Atom}],
-		[], [{integer, Line, Int}]} || {Atom, Int} <- Enums],
-    to_int_clauses(Line, Rest, Acc ++ Clauses).
+    {Line + 1, lists:reverse(Acc)};
+to_int_clauses(Line, [{Name, _Enums} | Rest], Acc) ->
+    Clause = {clause, Line, [{atom, Line, Name}, {var, Line, 'Enum'}], [],
+	      [{call, Line, {atom, Line, enum_to_int_name(Name)},
+		[{var, Line, 'Enum'}]}]},
+    to_int_clauses(Line + 1, Rest, [Clause | Acc]).
+
+enum_to_int_funs(Line, [], Acc) ->
+    {Line + 1, lists:reverse(Acc)};
+enum_to_int_funs(Line, [{Name, Enums} | Rest], Acc) ->
+    Clauses = [{clause, Line, [{atom, Line, Atom}], [],
+		[{integer, Line, Int}]} || {Atom, Int} <- Enums],
+    Fun = {function, Line, enum_to_int_name(Name), 1,
+	   Clauses ++ [?ERR_CLAUSE(Line, 1)]},
+    enum_to_int_funs(Line + 1, Rest, [Fun | Acc]).
 
 to_atom_fun(Line, Enums) ->
     {NewLine, Clauses} = to_atom_clauses(Line, Enums, []),
-    Fun = {function, Line, to_atom, 2, Clauses ++ [?ERR_CLAUSE(Line)]},
+    Fun = {function, Line, to_atom, 2, Clauses ++ [?ERR_CLAUSE(NewLine, 2)]},
     {NewLine, Fun}.
 
 to_atom_clauses(Line, [], Acc) ->
-    {Line + 1, Acc};
-to_atom_clauses(Line, [{Name, Enums} | Rest], Acc) ->
-    Clauses = [{clause, Line, [{atom, Line, Name},
-			       {integer, Line, Int}],
-		[], [{atom, Line, Atom}]} || {Atom, Int} <- Enums],
-    to_atom_clauses(Line, Rest, Acc ++ Clauses).
+    {Line + 1, lists:reverse(Acc)};
+to_atom_clauses(Line, [{Name, _Enums} | Rest], Acc) ->
+    Clause = {clause, Line, [{atom, Line, Name}, {var, Line, 'Enum'}], [],
+	      [{call, Line, {atom, Line, enum_to_atom_name(Name)},
+		[{var, Line, 'Enum'}]}]},
+    to_atom_clauses(Line + 1, Rest, [Clause | Acc]).
+
+enum_to_atom_funs(Line, [], Acc) ->
+    {Line + 1, lists:reverse(Acc)};
+enum_to_atom_funs(Line, [{Name, Enums} | Rest], Acc) ->
+    Clauses = [{clause, Line, [{integer, Line, Int}], [],
+		[{atom, Line, Atom}]} || {Atom, Int} <- Enums],
+    Fun = {function, Line, enum_to_atom_name(Name), 1,
+	   Clauses ++ [?ERR_CLAUSE(Line, 1)]},
+    enum_to_atom_funs(Line + 1, Rest, [Fun | Acc]).
 
 %% Unused for now
 %% add_error(Error) ->
@@ -157,3 +177,9 @@ add_warning(Warning) ->
 get_warnings() ->
     lists:reverse([{Line, ?MODULE, Warning}
 		   || {Line, Warning} <- get(warnings)]).
+
+enum_to_int_name(Name) ->
+    list_to_atom(atom_to_list(Name) ++ "_to_int").
+
+enum_to_atom_name(Name) ->
+    list_to_atom(atom_to_list(Name) ++ "_to_atom").
