@@ -1,13 +1,9 @@
-Eenum
-=====
-
-[![Build Status][travis_ci_image]][travis_ci]
+## Eenum [![Build Status][travis_ci_image]][travis_ci]
 
 **Eenum** is a simple enumeration parse transform for Erlang.
 It transforms `-enum` attributes into `to_int/2` and `to_atom/2` functions.
 
-How to use it?
---------------
+## How to use it?
 
  * Run `make` to build.
  * Run `make test` to run tests.

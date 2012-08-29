@@ -1,6 +1,6 @@
 {application, eenum,
  [{description, "Simple enumerations for Erlang"},
-  {vsn, "0.1"},
+  {vsn, "1.0"},
   {applications, [kernel,
                   stdlib,
                   compiler,
