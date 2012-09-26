@@ -54,7 +54,7 @@ It transforms `-enum` attributes into `to_int/2` and `to_atom/2` functions.
 Will be translated to:
 
 ```erlang
--export([to_int/2, to_atom/2]).
+-export([to_int/2, to_atom/2, keys/1, values/1]).
 
 to_int(simple_enum, Enum) ->
     simple_enum_to_int(Enum);
@@ -109,6 +109,16 @@ mixed_enum_to_atom(2) -> two;
 mixed_enum_to_atom(4) -> four;
 mixed_enum_to_atom(5) -> five;
 mixed_enum_to_atom(_) -> thrown(bad_enum).
+
+keys(simple_enum) -> [zero, one, two, three];
+keys(explicit_enum) -> [zero, two, four, six];
+keys(mixed_enum) -> [one, two, four, five];
+keys(_) -> throw(bad_enum).
+
+values(simple_enum) -> [0, 1, 2, 3];
+values(explicit_enum) -> [0, 2, 4, 6];
+values(mixed_enum) -> [1, 2, 4, 5];
+values(_) -> throw(bad_enum).
 ```
 
 [travis_ci]:

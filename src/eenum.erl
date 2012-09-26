@@ -24,7 +24,8 @@
 -export([parse_transform/2,
 	 format_error/1]).
 
--define(EXPORT, {attribute, 1, export, [{to_int, 2}, {to_atom, 2}]}).
+-define(EXPORT, {attribute, 1, export, [{to_int, 2}, {to_atom, 2},
+                                        {keys, 1}, {values, 1}]}).
 -define(ERR_CLAUSE(Line, A), {clause, Line,
 			      [{var, Line, '_'} || _ <- lists:seq(1, A)], [],
 			      [{call, Line, {atom, Line, throw},
@@ -117,7 +118,10 @@ generate_funs(Line, Enums) ->
     {Line3, ToIntFuns} = enum_to_int_funs(Line2, Enums, []),
     {Line4, ToAtomFun} = to_atom_fun(Line3, Enums),
     {Line5, ToAtomFuns} = enum_to_atom_funs(Line4, Enums, []),
-    [ToIntFun | ToIntFuns] ++ [ToAtomFun | ToAtomFuns] ++ [{eof, Line5 + 1}].
+    {Line6, KeysFun} = keys_fun(Line5, Enums),
+    {Line7, ValuesFun} = values_fun(Line6, Enums),
+    [ToIntFun | ToIntFuns] ++ [ToAtomFun | ToAtomFuns]
+        ++ [KeysFun, ValuesFun, {eof, Line7 + 1}].
 
 to_int_fun(Line, Enums) ->
     {NewLine, Clauses} = to_int_clauses(Line, Enums, []),
@@ -162,6 +166,31 @@ enum_to_atom_funs(Line, [{Name, Enums} | Rest], Acc) ->
     Fun = {function, Line, enum_to_atom_name(Name), 1,
 	   Clauses ++ [?ERR_CLAUSE(Line, 1)]},
     enum_to_atom_funs(Line + 1, Rest, [Fun | Acc]).
+
+keys_fun(Line, Names) ->
+    Fun = {function, Line, keys, 1,
+           [{clause, Line, [{atom, Line, Name}], [],
+             [key_list(Line, Enums)]} || {Name, Enums} <- Names]
+           ++ [?ERR_CLAUSE(Line, 1)]},
+    {Line + 1, Fun}.
+
+key_list(Line, []) ->
+    {nil, Line};
+key_list(Line, [{Atom, _} | Rest]) ->
+    {cons, Line, {atom, Line, Atom}, key_list(Line, Rest)}.
+
+values_fun(Line, Names) ->
+    Fun = {function, Line, values, 1,
+           [{clause, Line, [{atom, Line, Name}], [],
+             [value_list(Line, Enums)]} || {Name, Enums} <- Names]
+           ++ [?ERR_CLAUSE(Line, 1)]},
+    {Line + 1, Fun}.
+
+
+value_list(Line, []) ->
+    {nil, Line};
+value_list(Line, [{_, Int} | Rest]) ->
+    {cons, Line, {integer, Line, Int}, value_list(Line, Rest)}.
 
 %% Unused for now
 %% add_error(Error) ->

@@ -82,3 +82,21 @@ mixed_enum_test() ->
     ?assertEqual(five, to_atom(mixed_enum, 5)),
     ?assertException(throw, bad_enum, to_atom(mixed_enum, six)),
     ?assertEqual(seven, to_atom(mixed_enum, 7)).
+
+keys_test() ->
+    ?assertEqual(model([zero, one, two, three]),
+                 model(?MODULE:keys(simple_enum))),
+    ?assertEqual(model([zero, two, four, six]),
+                 model(?MODULE:keys(explicit_enum))),
+    ?assertEqual(model([zero, one, two, four, five, seven]),
+		 model(?MODULE:keys(mixed_enum))),
+    ?assertException(throw, bad_enum, ?MODULE:keys(undef_enum)).
+
+values_test() ->
+    ?assertEqual(model([0, 1, 2, 3]), model(?MODULE:values(simple_enum))),
+    ?assertEqual(model([0, 2, 4, 6]), model(?MODULE:values(explicit_enum))),
+    ?assertEqual(model([0, 1, 2, 4, 5, 7]), model(?MODULE:values(mixed_enum))),
+    ?assertException(throw, bad_enum, ?MODULE:values(undef_enum)).
+
+model(List) when is_list(List) ->
+    lists:sort(List).
