@@ -18,7 +18,7 @@
 %% @copyright 2012 Krzysztof Rutka
 %% @doc Eunit test suite for eenum.
 %% @private
--module(eenum_test).
+-module(eenum_tests).
 
 -compile({parse_transform, eenum}).
 
