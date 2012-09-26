@@ -37,51 +37,51 @@
 %%------------------------------------------------------------------------------
 
 simple_enum_test() ->
-    ?assertEqual(0, to_int(simple_enum, zero)),
-    ?assertEqual(1, to_int(simple_enum, one)),
-    ?assertEqual(2, to_int(simple_enum, two)),
-    ?assertEqual(3, to_int(simple_enum, three)),
+    ?assertEqual(0, ?MODULE:to_int(simple_enum, zero)),
+    ?assertEqual(1, ?MODULE:to_int(simple_enum, one)),
+    ?assertEqual(2, ?MODULE:to_int(simple_enum, two)),
+    ?assertEqual(3, ?MODULE:to_int(simple_enum, three)),
 
-    ?assertEqual(zero, to_atom(simple_enum, 0)),
-    ?assertEqual(one, to_atom(simple_enum, 1)),
-    ?assertEqual(two, to_atom(simple_enum, 2)),
-    ?assertEqual(three, to_atom(simple_enum, 3)).
+    ?assertEqual(zero, ?MODULE:to_atom(simple_enum, 0)),
+    ?assertEqual(one, ?MODULE:to_atom(simple_enum, 1)),
+    ?assertEqual(two, ?MODULE:to_atom(simple_enum, 2)),
+    ?assertEqual(three, ?MODULE:to_atom(simple_enum, 3)).
 
 explicit_enum_test() ->
-    ?assertEqual(0, to_int(explicit_enum, zero)),
-    ?assertException(throw, bad_enum, to_int(explicit_enum, one)),
-    ?assertEqual(2, to_int(explicit_enum, two)),
-    ?assertException(throw, bad_enum, to_int(explicit_enum, three)),
-    ?assertEqual(4, to_int(explicit_enum, four)),
-    ?assertException(throw, bad_enum, to_int(explicit_enum, five)),
-    ?assertEqual(6, to_int(explicit_enum, six)),
+    ?assertEqual(0, ?MODULE:to_int(explicit_enum, zero)),
+    ?assertException(throw, bad_enum, ?MODULE:to_int(explicit_enum, one)),
+    ?assertEqual(2, ?MODULE:to_int(explicit_enum, two)),
+    ?assertException(throw, bad_enum, ?MODULE:to_int(explicit_enum, three)),
+    ?assertEqual(4, ?MODULE:to_int(explicit_enum, four)),
+    ?assertException(throw, bad_enum, ?MODULE:to_int(explicit_enum, five)),
+    ?assertEqual(6, ?MODULE:to_int(explicit_enum, six)),
 
-    ?assertEqual(zero, to_atom(explicit_enum, 0)),
-    ?assertException(throw, bad_enum, to_atom(explicit_enum, 1)),
-    ?assertEqual(two, to_atom(explicit_enum, 2)),
-    ?assertException(throw, bad_enum, to_atom(explicit_enum, 3)),
-    ?assertEqual(four, to_atom(explicit_enum, 4)),
-    ?assertException(throw, bad_enum, to_atom(explicit_enum, 5)),
-    ?assertEqual(six, to_atom(explicit_enum, 6)).
+    ?assertEqual(zero, ?MODULE:to_atom(explicit_enum, 0)),
+    ?assertException(throw, bad_enum, ?MODULE:to_atom(explicit_enum, 1)),
+    ?assertEqual(two, ?MODULE:to_atom(explicit_enum, 2)),
+    ?assertException(throw, bad_enum, ?MODULE:to_atom(explicit_enum, 3)),
+    ?assertEqual(four, ?MODULE:to_atom(explicit_enum, 4)),
+    ?assertException(throw, bad_enum, ?MODULE:to_atom(explicit_enum, 5)),
+    ?assertEqual(six, ?MODULE:to_atom(explicit_enum, 6)).
 
 mixed_enum_test() ->
-    ?assertEqual(0, to_int(mixed_enum, zero)),
-    ?assertEqual(1, to_int(mixed_enum, one)),
-    ?assertEqual(2, to_int(mixed_enum, two)),
-    ?assertException(throw, bad_enum, to_int(mixed_enum, three)),
-    ?assertEqual(4, to_int(mixed_enum, four)),
-    ?assertEqual(5, to_int(mixed_enum, five)),
-    ?assertException(throw, bad_enum, to_int(mixed_enum, six)),
-    ?assertEqual(7, to_int(mixed_enum, seven)),
+    ?assertEqual(0, ?MODULE:to_int(mixed_enum, zero)),
+    ?assertEqual(1, ?MODULE:to_int(mixed_enum, one)),
+    ?assertEqual(2, ?MODULE:to_int(mixed_enum, two)),
+    ?assertException(throw, bad_enum, ?MODULE:to_int(mixed_enum, three)),
+    ?assertEqual(4, ?MODULE:to_int(mixed_enum, four)),
+    ?assertEqual(5, ?MODULE:to_int(mixed_enum, five)),
+    ?assertException(throw, bad_enum, ?MODULE:to_int(mixed_enum, six)),
+    ?assertEqual(7, ?MODULE:to_int(mixed_enum, seven)),
 
-    ?assertEqual(zero, to_atom(mixed_enum, 0)),
-    ?assertEqual(one, to_atom(mixed_enum, 1)),
-    ?assertEqual(two, to_atom(mixed_enum, 2)),
-    ?assertException(throw, bad_enum, to_atom(mixed_enum, three)),
-    ?assertEqual(four, to_atom(mixed_enum, 4)),
-    ?assertEqual(five, to_atom(mixed_enum, 5)),
-    ?assertException(throw, bad_enum, to_atom(mixed_enum, six)),
-    ?assertEqual(seven, to_atom(mixed_enum, 7)).
+    ?assertEqual(zero, ?MODULE:to_atom(mixed_enum, 0)),
+    ?assertEqual(one, ?MODULE:to_atom(mixed_enum, 1)),
+    ?assertEqual(two, ?MODULE:to_atom(mixed_enum, 2)),
+    ?assertException(throw, bad_enum, ?MODULE:to_atom(mixed_enum, three)),
+    ?assertEqual(four, ?MODULE:to_atom(mixed_enum, 4)),
+    ?assertEqual(five, ?MODULE:to_atom(mixed_enum, 5)),
+    ?assertException(throw, bad_enum, ?MODULE:to_atom(mixed_enum, six)),
+    ?assertEqual(seven, ?MODULE:to_atom(mixed_enum, 7)).
 
 keys_test() ->
     ?assertEqual(model([zero, one, two, three]),

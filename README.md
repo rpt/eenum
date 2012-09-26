@@ -121,6 +121,13 @@ values(mixed_enum) -> [1, 2, 4, 5];
 values(_) -> throw(bad_enum).
 ```
 
+## Changes
+
+### Version 1.1
+
+ * Adds `keys/1` and `values/1` functions
+ * Uses hierarchical functions for speedup
+
 [travis_ci]:
 http://travis-ci.org/rpt/eenum
 [travis_ci_image]:
