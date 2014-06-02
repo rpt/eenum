@@ -1,14 +1,10 @@
 .PHONY: compile test clean
 
-compile: rebar
-	@./rebar compile
+compile:
+	@ rebar compile
 
-test: rebar
-	@./rebar eunit
+test:
+	@ rebar eunit
 
-clean: rebar
-	@./rebar clean
-
-rebar:
-	@wget -q http://cloud.github.com/downloads/basho/rebar/rebar
-	@chmod u+x rebar
+clean:
+	@ rebar clean

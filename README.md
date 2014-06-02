@@ -123,12 +123,16 @@ values(_) -> throw(bad_enum).
 
 ## Changes
 
+### Version 0.1.2
+
+ * Use semantic versioning
+ * Compile and test on R17
+ * Handle columns
+
 ### Version 1.1
 
  * Adds `keys/1` and `values/1` functions
  * Uses hierarchical functions for speedup
 
-[travis_ci]:
-http://travis-ci.org/rpt/eenum
-[travis_ci_image]:
-https://secure.travis-ci.org/rpt/eenum.png
+[travis_ci]: https://travis-ci.org/rpt/eenum
+[travis_ci_image]: https://travis-ci.org/rpt/eenum.png
